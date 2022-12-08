@@ -14,7 +14,9 @@ raisin <- read_excel("Raisin_Dataset.xlsx", sheet = "Raisin_Grains_Dataset")
 shinyServer(function(input, output) {
 
     output$image <- renderImage({
-        list(src = "")
+        list(src = "raisin_image.jpg",
+             width = 400,
+             height = 400)
     } ,deleteFile = FALSE)
     output$distPlot <- renderPlot({
 
