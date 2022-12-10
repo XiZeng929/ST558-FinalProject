@@ -48,17 +48,55 @@ body <- dashboardBody(
         tabItem(tabName = "explore",
                 h2("Data Exploration"),
                 box(
+                    #Subsetting dataset using class
+                    selectInput("subset",
+                                "Class for subsetting dataset",
+                                choices = c("Kecimen" = "Kecimen",
+                                            "Besni" = "Besni",
+                                            "Both Class" = "both"),
+                                selected = "Kecimen"),
                     selectInput("var",
-                                "Variable",
-                                choices = c(Area = "area",                                                                          MajorAxisLength = "majoraxis",
-                                            MinorAxisLength = "minoraxis",
-                                            Eccentricity = "eccentricity",
-                                            ConvexArea = "convex",
-                                            Extent = "extent",
-                                            Perimeter = "peri"),
-                                selected = "area")
+                                "Variable selected for plot",
+                                choices = c(Area = "Area",
+                                            MajorAxisLength = "MajorAxisLength",
+                                            MinorAxisLength = "MinorAxisLength",
+                                            Eccentricity = "Eccentricity",
+                                            ConvexArea = "ConvexArea",
+                                            Extent = "Extent",
+                                            Perimeter = "Perimeter",
+                                            Class = "Class"),
+                                            selected = "Area"),
+                    conditionalPanel(condition = "input.var !=  'Class'",
+                                     selectInput("type",
+                                                 "Type of graphical summary",
+                                                 choices = c(Scatterplot = "scatter",
+                                                            Histogram = "hist"))
+                    ),
+                    conditionalPanel(condition = "input.subset =='both'",
+                                     checkboxInput("color",
+                                                   "Also change color based on class?")),
+                    selectInput("var2",
+                                "Variable selected for summary statistic",
+                                choices = c(Area = "Area",
+                                            MajorAxisLength = "MajorAxisLength",
+                                            MinorAxisLength = "MinorAxisLength",
+                                            Eccentricity = "Eccentricity",
+                                            ConvexArea = "ConvexArea",
+                                            Extent = "Extent",
+                                            Perimeter = "Perimeter"),
+                                            selected = "Area"),
+                    selectInput("stat",
+                                "Type of summary statistic",
+                                choices = c(mean = "mean",
+                                            maximum = "maximum",
+                                            minimum = "minimun",
+                                            "standard deviation" = "standard deviation"),
+                                            )
                 ),
-                plotOutput("scatter"),
+
+                plotOutput("graph"),
+                textOutput("summary"),
+                tableOutput("table")
         ),
         
         tabItem(tabName = "model",
@@ -70,6 +108,7 @@ body <- dashboardBody(
     )
 )
 
+ 
 
 dashboardPage(
     header,
