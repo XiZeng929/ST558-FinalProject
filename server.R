@@ -6,6 +6,8 @@ library(shiny)
 library(tidyverse)
 library(DT)
 library(readxl)
+library(caret)
+set.seed(1001)
 
 #Read in data
 raisin <- read_excel("Raisin_Dataset.xlsx", sheet = "Raisin_Grains_Dataset")
@@ -56,6 +58,15 @@ shinyServer(function(input, output,session) {
     output$table <- renderTable({
         newdata <- data()
     })
+    model_data <- reactive({
+        value <- input$prop
+        raisinIndex <- createDataPartition(diamonds$price, p = value, list = FALSE)
+        train <- raisin[raisindIndex, ]
+        test <- raisin[-raisinIndex, ]
+        train
+        test
+    })
+    #Logistic regression model fitting
     
 
 })
