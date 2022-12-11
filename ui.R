@@ -7,6 +7,7 @@ library(tidyverse)
 library(DT)
 library(readxl)
 library(shinydashboard)
+library(randomForest)
 
 #Read in data
 raisin <- read_excel("Raisin_Dataset.xlsx", sheet = "Raisin_Grains_Dataset")
@@ -123,21 +124,36 @@ body <- dashboardBody(
                              value = 0.7),
                  checkboxGroupInput("logitvar",
                                     "Select predictors used for Logistic Regression",
-                                    choices = names(raisin%>%select(-Class)),
-                                    selected = "Area"),
+                                    choices = names(raisin%>%select(-Class))),
+                                    #selected = "Area"),
                  checkboxGroupInput("treevar",
                                     "Select predictors used for Classification Tree",
-                                    choices = names(raisin%>%select(-Class)),
-                                    selected = "Area"),
+                                    choices = names(raisin%>%select(-Class))),
+                                    #selected = "Area"),
                  checkboxGroupInput("rfvar",
                                     "Select predictors used for Random Forest",
-                                    choices = names(raisin%>%select(-Class)),
-                                    selected = "Area"),
-                 textOutput("logit"),
-                 textOutput("tree"),
-                 textOutput("rf")
-                 
-                )
+                                    choices = names(raisin%>%select(-Class))),
+                                    #selected = "Area"),
+                 sliderInput("rfmtry",
+                             "Select the maximum tuning parameter mtry for random forest model",
+                             min = 0,
+                             max = 7,
+                             step = 1,
+                             value = 2),
+                actionButton("action",h3("Start model fitting")),
+                br(),
+                textOutput("inslogit"),
+                 verbatimTextOutput("logit"),
+                textOutput("instree"),
+                 plotOutput("tree"),
+                textOutput("insrf"),
+                 textOutput("rf"),
+                ),
+                
+                # tabPanel(
+                #     "Below is the output of the logistic regression",
+                #     verbatimTextOutput("logit"),
+                # )
         ),
         tabItem(tabName = "pred",
                 h2("Prediction")
