@@ -58,15 +58,19 @@ shinyServer(function(input, output,session) {
     output$table <- renderTable({
         newdata <- data()
     })
-    model_data <- reactive({
-        value <- input$prop
-        raisinIndex <- createDataPartition(diamonds$price, p = value, list = FALSE)
-        train <- raisin[raisindIndex, ]
-        test <- raisin[-raisinIndex, ]
-        train
-        test
-    })
-    #Logistic regression model fitting
+    # model_data <- reactive({
+    #     value <- input$prop
+    #     raisinIndex <- createDataPartition(diamonds$price, p = value, list = FALSE)
+    #     train <- raisin[raisindIndex, ]
+    #     test <- raisin[-raisinIndex, ]
+    #     train
+    #     test
+    # })
+    # #Logistic regression model fitting
+    # output$logit <- renderText({
+    #     data <- model_data() 
+    #     glmFit <- glm(Class ~ input$logitvar, data = train, family = "binomial")  
+    # })
     
 
 })

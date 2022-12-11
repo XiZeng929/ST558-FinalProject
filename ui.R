@@ -98,21 +98,13 @@ body <- dashboardBody(
                 textOutput("summary"),
                 tableOutput("table")
         ),
-        
-         tabItem(tabName = "model",
-                 h2("Modelling"),
-                 "You should explain these three modeling approaches, the benefits of each,
-                 and the drawbacks of each. You should include some type of math type in the explanation",
-                 "(you’ll need to include mathJax)."
-
-         ),
         tabItem(tabName = "info",
                 h2("Model Information"),
                 br(),
                 h3("Generalized Linear Regression"),
                 p(strong("Logistic regression"), " is a generalized linear regression model. It typically is for a binary response, and it uses a logit link function to connnect the log odds with linear combination of the predictors. It makes no assumptions about distributions of classes in the feature space, but it assumes linearity between dependent variables and the independent variables. The model equation is constructed below: "),
                 withMathJax(),
-                helpText('$$log\\frac{P(success)}{1-P(success)}=\\beta_0+\\beta_1x_1+\\beta_2x_2+...\\beta_px_p$$'),
+                helpText('$$log\\frac{P(success)}{1-P(success)}=\\beta_0+\\beta_1x_1+\\beta_2x_2+...+\\beta_px_p$$'),
                 br(),
                 h3("Classification Tree"),
                 p(strong("Classification tree"), " is a machine learning algorithm for classification. It is a structural mapping of binary desicions that lead to a decision about the class of an object. It is easy to interpret, and it is non-parametric, which means it does not require that the data associated with a particular class on a particular attribute follow any specific distribution (such as a normal distribution). However, it can have poor results for small datasets, and overfitting can easily occur. Also, the tree may need to be pruned for generalization."),
@@ -121,19 +113,29 @@ body <- dashboardBody(
                 p(strong("Random forest"), " is an ensemble learning method for classification, regression and other tasks that operates by constructing a multitude of decision trees at training time. Here for classification tasks, the output of the random forest is the class selected by most trees. Since it averages multiple decision trees, it often achieves higher accuracy than a single desicion tree fit, but it also sacrifices interprebility because of this.")
                 ),
         tabItem(tabName = "fitting",
-                h2("Model fitting"),
-                box(
-                 "Data Splitting",
+                tabPanel(
+                 h2("Model Fitting"),
                  sliderInput("prop",
                              "Select the proportion of data for train set",
                              min = 0,
                              max = 1,
                              step = 0.05,
                              value = 0.7),
-                 checkboxGroupInput("predvar",
-                                    "Select predictors used for modeling",
+                 checkboxGroupInput("logitvar",
+                                    "Select predictors used for Logistic Regression",
                                     choices = names(raisin%>%select(-Class)),
-                                    selected = "Area")
+                                    selected = "Area"),
+                 checkboxGroupInput("treevar",
+                                    "Select predictors used for Classification Tree",
+                                    choices = names(raisin%>%select(-Class)),
+                                    selected = "Area"),
+                 checkboxGroupInput("rfvar",
+                                    "Select predictors used for Random Forest",
+                                    choices = names(raisin%>%select(-Class)),
+                                    selected = "Area"),
+                 textOutput("logit"),
+                 textOutput("tree"),
+                 textOutput("rf")
                  
                 )
         ),
