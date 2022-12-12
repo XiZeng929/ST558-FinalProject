@@ -116,6 +116,7 @@ body <- dashboardBody(
         tabItem(tabName = "fitting",
                 tabPanel(
                  h2("Model Fitting"),
+                 h3("Note: In model fitting, Class Kecimen is assigned to be 0, while Besni is assigned to 1"),
                  sliderInput("prop",
                              "Select the proportion of data for train set",
                              min = 0,
@@ -130,24 +131,30 @@ body <- dashboardBody(
                                     "Select predictors used for Classification Tree",
                                     choices = names(raisin%>%select(-Class))),
                                     #selected = "Area"),
-                 checkboxGroupInput("rfvar",
-                                    "Select predictors used for Random Forest",
-                                    choices = names(raisin%>%select(-Class))),
-                                    #selected = "Area"),
                  sliderInput("rfmtry",
                              "Select the maximum tuning parameter mtry for random forest model",
                              min = 0,
                              max = 7,
                              step = 1,
                              value = 2),
+                checkboxInput("cv", "Also use Cross-Validation?"),
+                 conditionalPanel("input.cv",
+                                  numericInput("fold",
+                                               "How many folds for cross-validation?",
+                                                value = 5,
+                                                min = 1, 
+                                                max = 100, 
+                                                step = 1)),
                 actionButton("action",h3("Start model fitting")),
                 br(),
                 textOutput("inslogit"),
                  verbatimTextOutput("logit"),
                 textOutput("instree"),
-                 plotOutput("tree"),
+                 plotOutput("treeplot"),
+                verbatimTextOutput("tree"),
                 textOutput("insrf"),
-                 textOutput("rf"),
+                verbatimTextOutput("rf"),
+                plotOutput("rfplot"),
                 ),
                 
                 # tabPanel(
@@ -156,7 +163,29 @@ body <- dashboardBody(
                 # )
         ),
         tabItem(tabName = "pred",
-                h2("Prediction")
+                h2("Prediction"),
+                selectInput("model",
+                            "Model selected for prediction",
+                            choices = c("Logistic Regression"  = "logit",
+                                        "Classification Tree" = "tree",
+                                        "Random Forset" = "rf"),
+                            selected = "logit"),
+                numericInput("Area","Area",min = 0,value = round(mean(raisin$Area))),
+                numericInput("MajorAxisLength","MajorAxisLength",value = round(mean(raisin$MajorAxisLength))),
+                numericInput("MinorAxisLength","MinorAxisLength",min = 0,value = round(mean(raisin$MinorAxisLength))),
+                numericInput("Eccentricity","Eccentricity",min = 0,value = round(mean(raisin$Eccentricity))),
+                numericInput("ConvexArea","ConvexArea",min = 0,value = round(mean(raisin$ConvexArea))),
+                numericInput("Extent","Extent",min = 0,value = round(mean(raisin$Extent))),
+                numericInput("Perimeter","Perimeter",min = 0,value = round(mean(raisin$Perimeter))),
+                verbatimTextOutput("prediction")
+                
+                
+                #conditionalPanel(condition = "input.model == 'logit'",
+                                 #)
+                
+                
+                
+                
         ),
         tabItem(tabName = "data",
                 h2("Data glance and subsetting")

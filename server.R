@@ -66,12 +66,14 @@ shinyServer(function(input, output,session) {
         raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
         train <- raisin[raisinIndex, ]
         test <- raisin[-raisinIndex, ]
-        # summary(glm(raisin$Class ~ raisin[, variable], family = "binomial"))
         form <- sprintf("%s~%s","Class",paste0(input$logitvar,collapse="+"))
-        
-        if(input$action){
-            logreg <-glm(as.formula(form),family=binomial(),data=train)
-             summary(logreg)}
+        logreg <- glm(as.formula(form),family=binomial(),data=train)
+        logreg
+        #logit_pred <- predict(logreg, newdata = test,type = "response")
+        #logit_pred <-as.factor(ifelse(logit_pred >= 0.5,1,0))
+        #cm <- confusionMatrix(data = test$Class, reference = logit_pred)
+        #return(list("Summary of train set" = summary(logreg),
+                         #"Confusion matrix  for test set" = cm))
         })
     #Print out text that summarizes the logistic regression model
     output$inslogit <- renderText({
@@ -83,7 +85,13 @@ shinyServer(function(input, output,session) {
     })
     #Print summary of the logistic regression
     output$logit <- renderPrint({
-        logit_data()
+        if(input$action){
+            logreg <- logit_data()
+            logit_pred <- predict(logreg, newdata = test,type = "response")
+            logit_pred <-as.factor(ifelse(logit_pred >= 0.5,1,0))
+            cm <- confusionMatrix(data = test$Class, reference = logit_pred)
+            return(list("Summary of train set" = summary(logreg),
+                        "Confusion matrix  for test set" = cm))}
         })
     
     #Classification tree model fitting
@@ -93,9 +101,7 @@ shinyServer(function(input, output,session) {
         raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
         train <- raisin[raisinIndex, ]
         test <- raisin[-raisinIndex, ]
-        print(input$treevar)
         form <- sprintf("%s~%s","Class",paste0(input$treevar,collapse= "+" ))
-        #print(paste0("Formula form: ", form))
         if(input$action){
             treefit <- tree(as.formula(form),data = train)
             treefit}
@@ -105,47 +111,97 @@ shinyServer(function(input, output,session) {
         if(input$action == 1){
         data <- tree_data()
         form <- sprintf("%s~%s","Class",paste0(input$treevar,collapse= "+" ))
-        paste0("The output of Classification tree model on training set is shown below, ",
-               "and the formula used for Logistic regression is: " , form)}
+        paste0("The output of Classification tree model on training set is shown below:")}
     })
-    #Ad  summary(tree fit as well)
-    output$tree <- renderPlot({
-        if(input$action){treefit <- tree_data()
+    
+    output$treeplot <- renderPlot({
+        if(input$action){
+            treefit <- tree_data()
               plot(treefit)
               text(treefit)}
+    })
+    output$tree <- renderPrint({
+        if(input$action){
+            treefit <- tree_data()
+            summary(treefit)
+            tree_pred <- predict(treefit,test)
+            tree_pred <-as.factor(ifelse(tree_pred[,2] >= 0.5,1,0))
+            cm <- confusionMatrix(data = test$Class, reference = tree_pred)
+            return(list("Output for train set" = summary(treefit),
+                        "Confusion matrix for test set"=cm))
+            }
     })
     
     #Random Forest modeling
     rf_data <- reactive ({
         value <- input$prop
         raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
-        
         raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
         train <- raisin[raisinIndex, ]
         test <- raisin[-raisinIndex, ]
-        form <- sprintf("%s~%s","Class",paste0(input$rfvar,collapse= "+" ))
-        #print(paste0("Formula form: ", form))  #Add text output
-        if(input$action){rffit <- train(as.formula(form),
+        if(input$action){
+                       if(input$cv){rffit <- train(Class ~ .,
                        data = train,
                        method = "rf",
                        trControl = trainControl(method = "cv",
-                                                number = 5),
-                       tuneGrid = data.frame(mtry = 1:input$rfmtry))
-        rfPred <- predict(rffit, newdata = test)}
-        #rfRMSE <- sqrt(mean((rfPred-diamondsTest$price)^2))
-        # Variable importance plot
-        #varImpPlot(classifier_RF)
-        #treefit
+                                                number = input$fold),
+                       tuneGrid = expand.grid(mtry = 1:input$rfmtry))
+                       rfmodel <- randomForest(Class ~ ., data = train, mtry= rffit$bestTune[[1]])}
+                       if(input$cv == 0){
+                        rfmodel <- randomForest(Class ~ ., data = train,mtry = input$rfmtry)}
+                        return(rfmodel)
+                       }
     })
     #Print out text that summarizes the random forest model
-    output$instree <- renderText({
+    output$insrf <- renderText({
         if(input$action){
-        data <- rf_data()
-        form <- sprintf("%s~%s","Class",paste0(input$rfvar,collapse= "+" ))
-        paste0("The output of Random Forest model on training set is shown below, ",
-               "and the formula used for Random forest classification is: " , form)}
+        paste0("The output of Random forest model is shown below:")}
     })
+    output$rf <- renderPrint({
+        if(input$action){
+        rfmodel <- rf_data()
+        rfPred <- predict(rfmodel, newdata = test)
+        cm <- confusionMatrix(data = test$Class,reference = rfPred)
+        print(list("Output for train set" = rfmodel,
+                  "Confusion matrix for test set" = cm))
+        }
+    })
+    #Variable importance plot
+    output$rfplot <- renderPlot({
+        if(input$action){rfmodel <- rf_data()
+        varImpPlot(rfmodel)}
+    })
+    ###Prediction
+    df <- reactive({
+        df <- data.frame("Area" = input$Area,
+                         "MajorAxisLength" = input$MajorAxisLength,
+                         "MinorAxisLength"= input$MinorAxisLength,
+                         "Eccentricity"= input$Eccentricity,
+                         "ConvexArea"= input$ConvexArea,
+                          "Extent"= input$Extent,
+                         "Perimeter" = input$Perimeter)
+    })
+    output$prediction <- renderPrint({
+        # print(predict_data)
+        # predict(final_model, newdata = df(),type = "response")
+        if (input$model == "logit"){
+           final_model <-logit_data()
+           prediction <- predict(final_model, newdata = df(),type = "response")
+           result <- data.frame(prediction,Class = ifelse(prediction > 0.5,"Besni","Kecimen"))
+           print(result)
+           #print(predict(final_model, newdata = df(),type = "response"))
+           #print("If the predicted value is greater than 0.5, then the estimated Class is Besni, else if the preditced value is less than 0.5, then the estimated Class is Kecimen")
+           
+        }
+        else if (input$model == "tree"){
+            final_model <- tree_data()
+           predict(final_model, newdata = df(),type = "class")
+        }
+        else {
+            final_model <- rf_data()
+            predict(final_model, newdata = df(),type = "vote")
+        }
+    })
+
 })
-# output$logit <- renderText({
-#     data <- model_data()
-#     glmFit <- glm(Class ~ input$logitvar, data = train, family = "binomial")
+
