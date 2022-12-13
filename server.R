@@ -22,12 +22,14 @@ shinyServer(function(input, output,session) {
         ifelse(input$subset == "both",subdata <- raisin,subdata <- raisin%>%filter(Class == value))
         subdata
     })
+    
     #Add image regarding the raisin
     output$image <- renderImage({
         list(src = "raisin_image.jpg",
              width = 400,
              height = 400)
     } ,deleteFile = FALSE)
+    
     #Output summary graphics according to ui input
     output$graph <- renderPlot({
          newdata <- data()
@@ -44,6 +46,7 @@ shinyServer(function(input, output,session) {
          
     },
     width = 300, height = 300)
+    
     #Output summary statistics
     output$summary <- renderText({
         newdata <- data()
@@ -59,24 +62,27 @@ shinyServer(function(input, output,session) {
          }
         paste0("The ", input$stat, " of " , input$var2, " is ", out)
     })
+    
     #Output data table that have been subsetted according to the user input
     output$table <- renderDataTable({
         newdata <- data()
     })
+    
     #Create index for splitting data
     index <- reactive ({
         value <- input$prop
-        #raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
         raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
         raisinIndex
     })
-    #Create training set
+   
+     #Create training set
     train <- reactive({
         raisinIndex <- index()
         raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
         train <- raisin[raisinIndex, ]
         train
     })
+    
     #Create test set
     test <- reactive({
         raisinIndex <- index()
@@ -84,23 +90,15 @@ shinyServer(function(input, output,session) {
         test <- raisin[-raisinIndex, ]
         test
     })
+    
     #Logistic regression model fitting
     logit_data <- reactive ({
-        # value <- input$prop
-        # raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
-        # raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
-        # train <- raisin[raisinIndex, ]
-        # test <- raisin[-raisinIndex, ]
         train <- train()
         form <- sprintf("%s~%s","Class",paste0(input$logitvar,collapse="+"))
         logreg <- glm(as.formula(form),family=binomial(),data=train)
         logreg
-        #logit_pred <- predict(logreg, newdata = test,type = "response")
-        #logit_pred <-as.factor(ifelse(logit_pred >= 0.5,1,0))
-        #cm <- confusionMatrix(data = test$Class, reference = logit_pred)
-        #return(list("Summary of train set" = summary(logreg),
-                         #"Confusion matrix  for test set" = cm))
         })
+    
     #Print out text that summarizes the logistic regression model
     output$inslogit <- renderText({
         if(input$action == 1){
@@ -109,6 +107,7 @@ shinyServer(function(input, output,session) {
         paste0("The output of logistic regression model on training set is shown below, ",
                "and the formula used for Logistic regression is: " , form)}
     })
+    
     #Print summary of the logistic regression
     output$logit <- renderPrint({
         if(input$action){
@@ -123,17 +122,13 @@ shinyServer(function(input, output,session) {
     
     #Classification tree model fitting
     tree_data <- reactive ({
-        # value <- input$prop
-        # raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
-        # raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
-        # train <- raisin[raisinIndex, ]
-        # test <- raisin[-raisinIndex, ]
         train <- train()
         form <- sprintf("%s~%s","Class",paste0(input$treevar,collapse= "+" ))
         if(input$action){
             treefit <- tree(as.formula(form),data = train)
             treefit}
        })
+    
     #Print out text that summarizes the classification tree model
     output$instree <- renderText({
         if(input$action == 1){
@@ -141,6 +136,7 @@ shinyServer(function(input, output,session) {
         form <- sprintf("%s~%s","Class",paste0(input$treevar,collapse= "+" ))
         paste0("The output of Classification tree model on training set is shown below:")}
     })
+    
     #Print out the classification tree plot along with text
     output$treeplot <- renderPlot({
         if(input$action){
@@ -152,7 +148,6 @@ shinyServer(function(input, output,session) {
     output$tree <- renderPrint({
         if(input$action){
             treefit <- tree_data()
-            summary(treefit)
             test <- test()
             tree_pred <- predict(treefit,test)
             tree_pred <-as.factor(ifelse(tree_pred[,2] >= 0.5,1,0))
@@ -164,30 +159,30 @@ shinyServer(function(input, output,session) {
     
     #Random Forest modeling
     rf_data <- reactive ({
-        # value <- input$prop
-        # raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
-        # raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
-        # train <- raisin[raisinIndex, ]
-        # test <- raisin[-raisinIndex, ]
         train <- train()
         if(input$action){
-                       if(input$cv){rffit <- train(Class ~ .,
-                       data = train,
-                       method = "rf",
-                       trControl = trainControl(method = "cv",
-                                                number = input$fold),
-                       tuneGrid = expand.grid(mtry = 1:input$rfmtry))
-                       rfmodel <- randomForest(Class ~ ., data = train, mtry= rffit$bestTune[[1]])}
-                       if(input$cv == 0){
-                        rfmodel <- randomForest(Class ~ ., data = train,mtry = input$rfmtry)}
-                        return(rfmodel)
-                       }
+        if(input$cv){
+            rffit <- train(Class ~ .,
+                           data = train,
+                           method = "rf",
+                           trControl = trainControl(method = "cv",
+                                                     number = input$fold),
+                           tuneGrid = data.frame(mtry = 1:input$rfmtry))
+                      rfmodel <- randomForest(Class ~ ., data = trainset, mtry= rffit$bestTune[[1]])}
+         else{
+         rfmodel <- randomForest(Class ~ ., data = train, mtry = input$rfmtry)
+        }
+        return(rfmodel)}
+                       
     })
+    
     #Print out text that summarizes the random forest model
     output$insrf <- renderText({
         if(input$action){
         paste0("The output of Random forest model is shown below:")}
     })
+    
+    #Print out the summary of the random forest model
     output$rf <- renderPrint({
         if(input$action){
         rfmodel <- rf_data()
@@ -198,12 +193,16 @@ shinyServer(function(input, output,session) {
                   "Confusion matrix for test set" = cm))
         }
     })
-    #Variable importance plot
+    
+    #Produce Variable importance plot for final random forest model
     output$rfplot <- renderPlot({
-        if(input$action){rfmodel <- rf_data()
+        if(input$action){
+        rfmodel <- rf_data()
         varImpPlot(rfmodel)}
     })
+    
     ###Prediction
+    #Define a new data frame for the new data
     df <- reactive({
         df <- data.frame("Area" = input$Area,
                          "MajorAxisLength" = input$MajorAxisLength,
@@ -213,7 +212,8 @@ shinyServer(function(input, output,session) {
                           "Extent"= input$Extent,
                          "Perimeter" = input$Perimeter)
     })
-    #Create the output for prediction
+    
+    #Create the output for prediction according to user input
     output$prediction <- renderPrint({
         if (input$model == "logit"){
            final_model <-logit_data()
@@ -230,6 +230,7 @@ shinyServer(function(input, output,session) {
             predict(final_model, newdata = df(),type = "vote")
         }
     })
+    
     #Subsetting data according to the user input
     subdata <- reactive({
         colname <- input$subcol
@@ -237,11 +238,13 @@ shinyServer(function(input, output,session) {
         newdata <- newdata[input$startrow:input$endrow,]
         newdata
     })
+    
     #Output the subsetted data as data table on the ui
     output$data <- renderDataTable({
         subdata <- subdata()
         subdata
     })
+    
     #Define the option for downloading the subsetted data
     output$download <- downloadHandler(
         filename = "Raisin subset.csv",

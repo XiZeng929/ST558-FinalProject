@@ -43,7 +43,7 @@ body <- dashboardBody(
                 br(),
                 "The dataset is a raisins dataset that comes from UCI Machine Learning Repository. ",
                 a("(Data Source here) ",href = "https://archive.ics.uci.edu/ml/datasets/Raisin+Dataset#"),
-                "It has a binary response, and 7 continuous predictors, and it has total of 900 observations.",
+                "It has a binary response,each class of response have 450 count. The datset also contains 7 continuous predictors, and it has total of 900 observations.",
                 br(),
                 "Here, the application has total of 4 pages. The About page gives an introduction of the project as well as the dataset. The Data Exploration page can enable creating numerical and graphical summares as well as some user-defined option for data and plots. In Model Fitting page, 3 supervised learning model will be utilized to model the data. At last, the Data page enables user to subset and save data."
         ),
@@ -58,6 +58,7 @@ body <- dashboardBody(
                                             "Besni" = "Besni",
                                             "Both Class" = "both"),
                                 selected = "Kecimen"),
+                    #Define user input for graphical summaries
                     selectInput("var",
                                 "Variable selected for plot",
                                 choices = c(Area = "Area",
@@ -68,15 +69,18 @@ body <- dashboardBody(
                                             Extent = "Extent",
                                             Perimeter = "Perimeter"),
                                             selected = "Area"),
+                    #Define typr of the plot shown
                     conditionalPanel(condition = "input.var !=  'Class'",
                                      selectInput("type",
                                                  "Type of graphical summary",
                                                  choices = c(Scatterplot = "scatter",
                                                             Histogram = "hist"))
                     ),
+                    #Set options for coloring the points by Class
                     conditionalPanel(condition = "input.subset =='both'",
                                      checkboxInput("color",
                                                    "Also change color based on class?")),
+                    #Set options for calculating summary statistics
                     selectInput("var2",
                                 "Variable selected for summary statistic",
                                 choices = c(Area = "Area",
@@ -93,19 +97,21 @@ body <- dashboardBody(
                                             maximum = "maximum",
                                             minimum = "minimun",
                                             "standard deviation" = "standard deviation"),
-                                selected = "mean")
-                ),
-
+                                selected = "mean")),
+                    
+                #The graphical summaries and statistic summaries output
                 plotOutput("graph"),
                 textOutput("summary"),
                 dataTableOutput("table")
         ),
+        
         #Define the model info tab
         tabItem(tabName = "info",
                 h2("Model Information"),
                 br(),
                 h3("Generalized Linear Regression"),
                 p(strong("Logistic regression"), " is a generalized linear regression model. It typically is for a binary response, and it uses a logit link function to connnect the log odds with linear combination of the predictors. It makes no assumptions about distributions of classes in the feature space, but it assumes linearity between dependent variables and the independent variables. The model equation is constructed below: "),
+                #The model equation for logistic regression
                 withMathJax(),
                 helpText('$$log\\frac{P(success)}{1-P(success)}=\\beta_0+\\beta_1x_1+\\beta_2x_2+...+\\beta_px_p$$'),
                 br(),
@@ -134,6 +140,7 @@ body <- dashboardBody(
                                     "Select predictors used for Classification Tree",
                                     choices = names(raisin%>%select(-Class))),
                                     #selected = "Area"),
+                 #User input for setting tuning parameters for rf model 
                  sliderInput("rfmtry",
                              "Select the maximum tuning parameter mtry for random forest model",
                              min = 0,
@@ -141,7 +148,8 @@ body <- dashboardBody(
                              step = 1,
                              value = 2),
                 checkboxInput("cv", "Also use Cross-Validation?"),
-                 conditionalPanel("input.cv",
+                #Set folds for cv
+                conditionalPanel("input.cv",
                                   numericInput("fold",
                                                "How many folds for cross-validation?",
                                                 value = 5,
@@ -150,10 +158,12 @@ body <- dashboardBody(
                                                 step = 1)),
                 actionButton("action",h3("Start model fitting")),
                 br(),
+                
+                #Output for the 3 types of models
                 textOutput("inslogit"),
-                 verbatimTextOutput("logit"),
+                verbatimTextOutput("logit"),
                 textOutput("instree"),
-                 plotOutput("treeplot"),
+                plotOutput("treeplot"),
                 verbatimTextOutput("tree"),
                 textOutput("insrf"),
                 verbatimTextOutput("rf"),
@@ -163,12 +173,14 @@ body <- dashboardBody(
         #Define the prediction tab
         tabItem(tabName = "pred",
                 h2("Prediction"),
+                #Input for type of the model used to predict
                 selectInput("model",
                             "Model selected for prediction",
                             choices = c("Logistic Regression"  = "logit",
                                         "Classification Tree" = "tree",
                                         "Random Forset" = "rf"),
                             selected = "logit"),
+                #Input for new data point
                 numericInput("Area","Area",min = 0,value = round(mean(raisin$Area))),
                 numericInput("MajorAxisLength","MajorAxisLength",value = round(mean(raisin$MajorAxisLength))),
                 numericInput("MinorAxisLength","MinorAxisLength",min = 0,value = round(mean(raisin$MinorAxisLength))),
@@ -176,22 +188,30 @@ body <- dashboardBody(
                 numericInput("ConvexArea","ConvexArea",min = 0,value = round(mean(raisin$ConvexArea))),
                 numericInput("Extent","Extent",min = 0,value = round(mean(raisin$Extent))),
                 numericInput("Perimeter","Perimeter",min = 0,value = round(mean(raisin$Perimeter))),
+                #Output prediction result
                 verbatimTextOutput("prediction")
         ),
-        #Define the last data subsetting tab
+        
+        #Define the last data subseting tab
         tabItem(tabName = "data",
                 h2("Data subsetting"),
                 p("In this page, users can scroll through the daset, also can subset the raisin data and download the subsetted data as a csv file. "),
+                #Define the columns for subset data
                 selectInput(
                     inputId = "subcol",
                     label = "Select columns:",
                     choices = names(raisin),
                     multiple = TRUE),
+                
+                #Define the row numbers for subset data
                 numericInput("startrow","Start Row Number",min = 1,max = length(raisin$Class),value = 1,step = 1),
                 numericInput("endrow","End Row Number",min = 1, max = length(raisin$Class),value = 50, step = 1),
+                
+                #Set the download button for downloading the dataset
                 downloadButton(outputId = "download",
                                label = "Download"),
                 br(),
+                #Output data table
                 dataTableOutput("data")
         
         )
