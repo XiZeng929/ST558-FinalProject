@@ -25,19 +25,19 @@ details.
 
 ``` r
 install.packages(c("shiny", "tidyverse", "shinydashboard",
-                   "DT", "readxl", "tree", "randomForest","caret))
+                   "DT", "readxl", "tree", "randomForest","caret"))
 ```
 
 ## Code for run the App
 
 ``` r
-shiny::runGitHub(repo = "ST558-FinalProject", username = "XiZeng929",subdir = "Final_Project/")
+shiny::runGitHub(repo = "ST558-FinalProject", username = "XiZeng929")
 ```
 
 # Code to render README file
 
 ``` r
-rmarkdown::render("README.rmd", 
+rmarkdown::render("readme.Rmd", 
           output_format = "github_document",
           output_file = "README.md",
           output_options = list(

@@ -113,7 +113,7 @@ body <- dashboardBody(
                 p(strong("Logistic regression"), " is a generalized linear regression model. It typically is for a binary response, and it uses a logit link function to connnect the log odds with linear combination of the predictors. It makes no assumptions about distributions of classes in the feature space, but it assumes linearity between dependent variables and the independent variables. The model equation is constructed below: "),
                 #The model equation for logistic regression
                 withMathJax(),
-                helpText('$$log\\frac{P(success)}{1-P(success)}=\\beta_0+\\beta_1x_1+\\beta_2x_2+...+\\beta_px_p$$'),
+                helpText('$$log\\frac{P(Class = Besni)}{1-P(Class = Besni)}=\\beta_0+\\beta_1x_1+\\beta_2x_2+...+\\beta_px_p$$'),
                 br(),
                 h3("Classification Tree"),
                 p(strong("Classification tree"), " is a machine learning algorithm for classification. It is a structural mapping of binary desicions that lead to a decision about the class of an object. It is easy to interpret, and it is non-parametric, which means it does not require that the data associated with a particular class on a particular attribute follow any specific distribution (such as a normal distribution). However, it can have poor results for small datasets, and overfitting can easily occur. Also, the tree may need to be pruned for generalization."),
