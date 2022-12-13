@@ -32,12 +32,12 @@ install.packages(c("shiny", "tidyverse", "shinydashboard",
 ## Code for run the App  
 
 ```{r echo=TRUE, eval=FALSE}
-shiny::runGitHub(repo = "ST558-FinalProject", username = "XiZeng929",subdir = "Final_Project/")
+shiny::runGitHub(repo = "ST558-FinalProject", username = "XiZeng929")
 ```
 
 # Code to render README file  
 ```{r README, echo=TRUE, eval=FALSE}
-rmarkdown::render("README.rmd", 
+rmarkdown::render("readme.Rmd", 
           output_format = "github_document",
           output_file = "README.md",
           output_options = list(
