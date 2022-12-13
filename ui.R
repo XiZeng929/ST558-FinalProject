@@ -173,6 +173,7 @@ body <- dashboardBody(
         #Define the prediction tab
         tabItem(tabName = "pred",
                 h2("Prediction"),
+                h3("Note: In model fitting, Class Kecimen is assigned to be 0, while Besni is assigned to 1"),
                 #Input for type of the model used to predict
                 selectInput("model",
                             "Model selected for prediction",
