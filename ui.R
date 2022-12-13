@@ -27,8 +27,9 @@ sidebar <- dashboardSidebar(
         menuItem("Data", tabName = "data")
     )
 )
-
+#Define the body of the ui
 body <- dashboardBody(
+    #Define the first data page
     tabItems(
         tabItem(tabName = "desc",
                 h2("Data Description"),
@@ -46,6 +47,7 @@ body <- dashboardBody(
                 br(),
                 "Here, the application has total of 4 pages. The About page gives an introduction of the project as well as the dataset. The Data Exploration page can enable creating numerical and graphical summares as well as some user-defined option for data and plots. In Model Fitting page, 3 supervised learning model will be utilized to model the data. At last, the Data page enables user to subset and save data."
         ),
+        #Define the data exploration tab
         tabItem(tabName = "explore",
                 h2("Data Exploration"),
                 box(
@@ -98,6 +100,7 @@ body <- dashboardBody(
                 textOutput("summary"),
                 dataTableOutput("table")
         ),
+        #Define the model info tab
         tabItem(tabName = "info",
                 h2("Model Information"),
                 br(),
@@ -112,6 +115,7 @@ body <- dashboardBody(
                 h3("Random Forest"),
                 p(strong("Random forest"), " is an ensemble learning method for classification, regression and other tasks that operates by constructing a multitude of decision trees at training time. Here for classification tasks, the output of the random forest is the class selected by most trees. Since it averages multiple decision trees, it often achieves higher accuracy than a single desicion tree fit, but it also sacrifices interprebility because of this.")
                 ),
+        #Define the model fitting tab
         tabItem(tabName = "fitting",
                 tabPanel(
                  h2("Model Fitting"),
@@ -155,12 +159,8 @@ body <- dashboardBody(
                 verbatimTextOutput("rf"),
                 plotOutput("rfplot"),
                 ),
-                
-                # tabPanel(
-                #     "Below is the output of the logistic regression",
-                #     verbatimTextOutput("logit"),
-                # )
         ),
+        #Define the prediction tab
         tabItem(tabName = "pred",
                 h2("Prediction"),
                 selectInput("model",
@@ -178,6 +178,7 @@ body <- dashboardBody(
                 numericInput("Perimeter","Perimeter",min = 0,value = round(mean(raisin$Perimeter))),
                 verbatimTextOutput("prediction")
         ),
+        #Define the last data subsetting tab
         tabItem(tabName = "data",
                 h2("Data subsetting"),
                 p("In this page, users can scroll through the daset, also can subset the raisin data and download the subsetted data as a csv file. "),
@@ -198,7 +199,7 @@ body <- dashboardBody(
 )
 
  
-
+#Wrap the header, sidebar and body
 dashboardPage(
     header,
     sidebar,

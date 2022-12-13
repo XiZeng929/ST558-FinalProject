@@ -22,12 +22,13 @@ shinyServer(function(input, output,session) {
         ifelse(input$subset == "both",subdata <- raisin,subdata <- raisin%>%filter(Class == value))
         subdata
     })
-
+    #Add image regarding the raisin
     output$image <- renderImage({
         list(src = "raisin_image.jpg",
              width = 400,
              height = 400)
     } ,deleteFile = FALSE)
+    #Output summary graphics according to ui input
     output$graph <- renderPlot({
          newdata <- data()
          options(repr.plot.width = 1, repr.plot.height =1)
@@ -43,6 +44,7 @@ shinyServer(function(input, output,session) {
          
     },
     width = 300, height = 300)
+    #Output summary statistics
     output$summary <- renderText({
         newdata <- data()
         if (input$stat == "minimum"){
@@ -57,21 +59,25 @@ shinyServer(function(input, output,session) {
          }
         paste0("The ", input$stat, " of " , input$var2, " is ", out)
     })
+    #Output data table that have been subsetted according to the user input
     output$table <- renderDataTable({
         newdata <- data()
     })
+    #Create index for splitting data
     index <- reactive ({
         value <- input$prop
         #raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
         raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
         raisinIndex
     })
+    #Create training set
     train <- reactive({
         raisinIndex <- index()
         raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
         train <- raisin[raisinIndex, ]
         train
     })
+    #Create test set
     test <- reactive({
         raisinIndex <- index()
         raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
@@ -135,13 +141,14 @@ shinyServer(function(input, output,session) {
         form <- sprintf("%s~%s","Class",paste0(input$treevar,collapse= "+" ))
         paste0("The output of Classification tree model on training set is shown below:")}
     })
-    
+    #Print out the classification tree plot along with text
     output$treeplot <- renderPlot({
         if(input$action){
             treefit <- tree_data()
               plot(treefit)
               text(treefit)}
     })
+    #Print out the summary of classification tree model fit and performance metrics of test set
     output$tree <- renderPrint({
         if(input$action){
             treefit <- tree_data()
@@ -206,6 +213,7 @@ shinyServer(function(input, output,session) {
                           "Extent"= input$Extent,
                          "Perimeter" = input$Perimeter)
     })
+    #Create the output for prediction
     output$prediction <- renderPrint({
         if (input$model == "logit"){
            final_model <-logit_data()
@@ -222,16 +230,19 @@ shinyServer(function(input, output,session) {
             predict(final_model, newdata = df(),type = "vote")
         }
     })
+    #Subsetting data according to the user input
     subdata <- reactive({
         colname <- input$subcol
         newdata <- raisin%>% select(colname)
         newdata <- newdata[input$startrow:input$endrow,]
         newdata
     })
+    #Output the subsetted data as data table on the ui
     output$data <- renderDataTable({
         subdata <- subdata()
         subdata
     })
+    #Define the option for downloading the subsetted data
     output$download <- downloadHandler(
         filename = "Raisin subset.csv",
         content = function(file){
