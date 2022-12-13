@@ -56,7 +56,7 @@ shinyServer(function(input, output,session) {
          }
         paste0("The ", input$stat, " of " , input$var2, " is ", out)
     })
-    output$table <- renderTable({
+    output$table <- renderDataTable({
         newdata <- data()
     })
     #Logistic regression model fitting
@@ -182,16 +182,11 @@ shinyServer(function(input, output,session) {
                          "Perimeter" = input$Perimeter)
     })
     output$prediction <- renderPrint({
-        # print(predict_data)
-        # predict(final_model, newdata = df(),type = "response")
         if (input$model == "logit"){
            final_model <-logit_data()
            prediction <- predict(final_model, newdata = df(),type = "response")
            result <- data.frame(prediction,Class = ifelse(prediction > 0.5,"Besni","Kecimen"))
            print(result)
-           #print(predict(final_model, newdata = df(),type = "response"))
-           #print("If the predicted value is greater than 0.5, then the estimated Class is Besni, else if the preditced value is less than 0.5, then the estimated Class is Kecimen")
-           
         }
         else if (input$model == "tree"){
             final_model <- tree_data()
@@ -202,6 +197,20 @@ shinyServer(function(input, output,session) {
             predict(final_model, newdata = df(),type = "vote")
         }
     })
-
+    subdata <- reactive({
+        colname <- input$subcol
+        newdata <- raisin%>% select(colname)
+        newdata <- newdata[input$startrow:input$endrow,]
+        newdata
+    })
+    output$data <- renderDataTable({
+        subdata <- subdata()
+        subdata
+    })
+    output$download <- downloadHandler(
+        filename = "Raisin subset.csv",
+        content = function(file){
+            write_csv(subdata(),file)
+        })
 })
 

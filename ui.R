@@ -97,7 +97,7 @@ body <- dashboardBody(
 
                 plotOutput("graph"),
                 textOutput("summary"),
-                tableOutput("table")
+                dataTableOutput("table")
         ),
         tabItem(tabName = "info",
                 h2("Model Information"),
@@ -178,17 +178,22 @@ body <- dashboardBody(
                 numericInput("Extent","Extent",min = 0,value = round(mean(raisin$Extent))),
                 numericInput("Perimeter","Perimeter",min = 0,value = round(mean(raisin$Perimeter))),
                 verbatimTextOutput("prediction")
-                
-                
-                #conditionalPanel(condition = "input.model == 'logit'",
-                                 #)
-                
-                
-                
-                
         ),
         tabItem(tabName = "data",
-                h2("Data glance and subsetting")
+                h2("Data subsetting"),
+                p("In this page, users can scroll through the daset, also can subset the raisin data and download the subsetted data as a csv file. "),
+                selectInput(
+                    inputId = "subcol",
+                    label = "Select columns:",
+                    choices = names(raisin),
+                    multiple = TRUE),
+                numericInput("startrow","Start Row Number",min = 1,max = length(raisin$Class),value = 1,step = 1),
+                numericInput("endrow","End Row Number",min = 1, max = length(raisin$Class),value = 50, step = 1),
+                downloadButton(outputId = "download",
+                               label = "Download"),
+                br(),
+                dataTableOutput("data")
+        
         )
     )
 )
