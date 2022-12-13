@@ -8,6 +8,7 @@ library(DT)
 library(readxl)
 library(caret)
 library(tree)
+library(randomForest)
 set.seed(1001)
 
 #Read in data
@@ -59,13 +60,32 @@ shinyServer(function(input, output,session) {
     output$table <- renderDataTable({
         newdata <- data()
     })
+    index <- reactive ({
+        value <- input$prop
+        #raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
+        raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
+        raisinIndex
+    })
+    train <- reactive({
+        raisinIndex <- index()
+        raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
+        train <- raisin[raisinIndex, ]
+        train
+    })
+    test <- reactive({
+        raisinIndex <- index()
+        raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
+        test <- raisin[-raisinIndex, ]
+        test
+    })
     #Logistic regression model fitting
     logit_data <- reactive ({
-        value <- input$prop
-        raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
-        raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
-        train <- raisin[raisinIndex, ]
-        test <- raisin[-raisinIndex, ]
+        # value <- input$prop
+        # raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
+        # raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
+        # train <- raisin[raisinIndex, ]
+        # test <- raisin[-raisinIndex, ]
+        train <- train()
         form <- sprintf("%s~%s","Class",paste0(input$logitvar,collapse="+"))
         logreg <- glm(as.formula(form),family=binomial(),data=train)
         logreg
@@ -87,6 +107,7 @@ shinyServer(function(input, output,session) {
     output$logit <- renderPrint({
         if(input$action){
             logreg <- logit_data()
+            test <- test()
             logit_pred <- predict(logreg, newdata = test,type = "response")
             logit_pred <-as.factor(ifelse(logit_pred >= 0.5,1,0))
             cm <- confusionMatrix(data = test$Class, reference = logit_pred)
@@ -96,11 +117,12 @@ shinyServer(function(input, output,session) {
     
     #Classification tree model fitting
     tree_data <- reactive ({
-        value <- input$prop
-        raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
-        raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
-        train <- raisin[raisinIndex, ]
-        test <- raisin[-raisinIndex, ]
+        # value <- input$prop
+        # raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
+        # raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
+        # train <- raisin[raisinIndex, ]
+        # test <- raisin[-raisinIndex, ]
+        train <- train()
         form <- sprintf("%s~%s","Class",paste0(input$treevar,collapse= "+" ))
         if(input$action){
             treefit <- tree(as.formula(form),data = train)
@@ -124,6 +146,7 @@ shinyServer(function(input, output,session) {
         if(input$action){
             treefit <- tree_data()
             summary(treefit)
+            test <- test()
             tree_pred <- predict(treefit,test)
             tree_pred <-as.factor(ifelse(tree_pred[,2] >= 0.5,1,0))
             cm <- confusionMatrix(data = test$Class, reference = tree_pred)
@@ -134,11 +157,12 @@ shinyServer(function(input, output,session) {
     
     #Random Forest modeling
     rf_data <- reactive ({
-        value <- input$prop
-        raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
-        raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
-        train <- raisin[raisinIndex, ]
-        test <- raisin[-raisinIndex, ]
+        # value <- input$prop
+        # raisin$Class = as.factor(ifelse(raisin$Class == "Kecimen", 0, 1))
+        # raisinIndex <- createDataPartition(raisin$Class, p = value, list = FALSE)
+        # train <- raisin[raisinIndex, ]
+        # test <- raisin[-raisinIndex, ]
+        train <- train()
         if(input$action){
                        if(input$cv){rffit <- train(Class ~ .,
                        data = train,
@@ -160,6 +184,7 @@ shinyServer(function(input, output,session) {
     output$rf <- renderPrint({
         if(input$action){
         rfmodel <- rf_data()
+        test <- test()
         rfPred <- predict(rfmodel, newdata = test)
         cm <- confusionMatrix(data = test$Class,reference = rfPred)
         print(list("Output for train set" = rfmodel,
