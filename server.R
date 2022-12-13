@@ -162,13 +162,13 @@ shinyServer(function(input, output,session) {
         train <- train()
         if(input$action){
         if(input$cv){
-            rffit <- train(Class ~ .,
+            rffit <- caret::train(Class ~ .,
                            data = train,
                            method = "rf",
                            trControl = trainControl(method = "cv",
-                                                     number = input$fold),
-                           tuneGrid = data.frame(mtry = 1:input$rfmtry))
-                      rfmodel <- randomForest(Class ~ ., data = trainset, mtry= rffit$bestTune[[1]])}
+                                                    number = input$fold),
+                           tuneGrid = data.frame(mtry = c(1:input$rfmtry)))
+                      rfmodel <- randomForest(Class ~ ., data = train, mtry= rffit$bestTune[[1]])}
          else{
          rfmodel <- randomForest(Class ~ ., data = train, mtry = input$rfmtry)
         }
